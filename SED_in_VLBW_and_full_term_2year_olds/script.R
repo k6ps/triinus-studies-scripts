@@ -1,36 +1,11 @@
-#
-# Ver. 8, 05.08.2017. Selle tegi Taavi Tänavsuu (tanavst@gmail.com).
-#
-# Uuendused v6-ga võrreldes:
-# - 
-#
-# Uuendused v6-ga võrreldes:
-# - Kodukataloogi asukoha muudatus.
-# - Valimi kirjeldusse lisatud isa haridus.
-# - Valimi kirjelduses protsendid ilusamini formaaditud ning viidud kokku samasse veergu arvudega.
-# - Valimi kirjeldusest eemaldatud veerud, mis kirjeldavad kogu valimit korraga.
-# - Kontrollgrupp nimetatud "FT".
-# - Valimi kirjelduse osast eemaldatud eraldi veerud =1 ja =0. Piisab ainult =1 veergudest.
-# - Valimi kirjelduses NA-de eraldi veerg asendatud numbrite veerus sulgudes oleva väärtusega.
-# - Valimi kirjelduse kategoriaalsete tunnuste ossa lisatud kõik EST-Q tulemused.
-# - Valimi kirjelduses veergude nimedele lisatud valimite suurused.
-# - Valimi kirjelduse järjestatud tunnuste osast eemaldatud mediaan.
-# - Univariate ja multivariate uuring kogugrupi kohta välja jäetud.
-# - Multivariate uuringu vahetulemusi ei kirjuta faili.
-# - Linearregressiooni tabelid ilusamini formaaditud.
-# - Tabelite loomisel kasutatud muutuja "tulemus" asendatud eraldi muutujaga iga tabeli kohta, sest neid on vaja meelde jätta hilisemaks kokkukombineerimiseks.
-# - Lineaarregressiooni tabelite failide nimedest kaotatud "tabel3" osa, sest see tundus mõttetu.
-# - Loodud kombineeritud võrdlevad tabelid univariate ja multivariate osast. Eraldi gruppide kaupa tabeleid enam ei kirjutata faili.
-# - Valimi kirjelduses kombineeritud ühte tabelisse kokku kategoriaalsed ja pidevtunnused. Eraldi tabelitena neid ei ole enam trükitud.
-# - Loodud üldine funktsioon tulemuste väljastamiseks ja faili kirjutamiseks.
-
-setwd("C:/Users/Taavi/OneDrive/Vanadest_arvutitest_arhiveeritud/SED_in_VLBW_and_full_term_2year_olds")
+setwd("C:/Users/Taavi/Projects/triinus-studies-scripts/SED_in_VLBW_and_full_term_2year_olds")
 
 valjasta.tulemus <- function(tabel, pealkiri, kirjuta.faili = TRUE) {
 	# sellesse alamkausta salvestatakse kõik tabelid (.csv failid).
-	tulemuste_alamkaust <- "exceli_failid/05.08.2017_v8/"
+	tulemuste_alamkaust <- "results_08.08.2017/"
+	dir.create(file.path(getwd(), tulemuste_alamkaust), showWarnings = FALSE)
 
-	print(pealkiri) 
+	print(pealkiri)
 	print(tabel)
 	
 	if (kirjuta.faili) {
@@ -39,7 +14,7 @@ valjasta.tulemus <- function(tabel, pealkiri, kirjuta.faili = TRUE) {
 }
 
 # Andmete lugemine spetsiaalselt ettevalmistatud CSV-st (Excelist otse lugemine väidetavalt ei tööta 64bit windowsis):
-t <- read.csv("master_data.csv", sep=";")
+t <- read.delim("sample.csv", fileEncoding = "UTF-8")
 
 # Neid läheb ehk vaja mõnede sõltumatute muutujate teisendamisel
 triinu.sotsem.andmed.asendaNaNulliga <- function(x) { if(is.na(x)) 0 else x }
@@ -47,7 +22,7 @@ triinu.sotsem.andmed.asendaNullNaga <- function(x) { if(x == 0) NA else x }
 
 # Parandame veergu "lasteaeda vanus päevades". Seal on muidu nullid nendel lastel kes ei käigi lasteaias, aga peaks olema NA. Muidu lineaarregressioon loeb
 # nulli normaalseks väärtuseks, st. et nullindast päevast juba läks lasteaeda.
-t$lasteaeda_vanus_paevades <- as.numeric(lapply(t$lasteaeda_vanus_paevades,triinu.sotsem.andmed.asendaNullNaga))
+t$lasteaeda_vanus_paevadest <- as.numeric(lapply(t$lasteaeda_vanus_paevades, triinu.sotsem.andmed.asendaNullNaga))
 
 # Defineerime mõningad siinses uurimuses kasutatavad andmete alamhulgad
 # Kliiniline grupp
@@ -65,12 +40,7 @@ t_kl_ja_rp_koju_1 <- subset(t, (kliiniline == 1 & rp_haiglast_kojuminekul == 1))
 # Kliinilisest grupist need, kes ei saanud rinnapiima haiglast kojuminekul
 t_kl_ja_rp_koju_0 <- subset(t, (kliiniline == 1 & rp_haiglast_kojuminekul == 0))
 
-# =====================
-x <- coef(muudel(subset(t, kliiniline == 1), "sotsiaal.em", parempool))
-# =====================
-
 # See teeb lineaarregressiooni, väljastades midagi artiklitoorikus oleva tabel 3 sarnast. 
-# -- odds-ratio asemel kasutame lineaarregressiooni
 # -- muutujaid on vähemalt esialgu palju rohkem kui toorikus
 triinu.sotsem.lineaarregressioon = function(uuritavad, andmed, multivar=FALSE) {
 
@@ -899,7 +869,7 @@ triinu.sotsem.jarjestatud.veerg <- function(andmehulk) {
 
 	# isa_vanus
 	# isa vanus
-	blokk <- tee.blokk.konkreetne(with(andmehulk, isa_vanus))
+	blokk <- tee.blokk(with(andmehulk, isa_vanus))
 	rownames(blokk)[1] <- "isa_vanus"
 	tabel <- rbind(tabel, blokk)
 	
